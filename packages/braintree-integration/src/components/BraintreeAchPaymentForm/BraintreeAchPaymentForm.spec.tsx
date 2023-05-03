@@ -44,7 +44,7 @@ describe('BraintreeAchPaymentForm', () => {
             checkoutState,
             paymentForm,
             language,
-            mandateText: 'default',
+            initializePayment: jest.fn(),
         };
 
         BraintreeAchPaymentFormTest = (props: BraintreeAchPaymentFormProps) => {
@@ -93,5 +93,25 @@ describe('BraintreeAchPaymentForm', () => {
         const component = mount(<BraintreeAchPaymentFormTest {...defaultProps} />);
 
         expect(component.find(LoadingOverlay).prop('hideContentWhenLoading')).toBe(true);
+    });
+
+    it('mandateText should be hidden', () => {
+        const component = mount(<BraintreeAchPaymentFormTest {...defaultProps} />);
+
+        expect(component.find('.mandate-text')).toHaveLength(0);
+    });
+
+    it('mandateText should be visible', () => {
+        const component = mount(<BraintreeAchPaymentFormTest {...defaultProps} />);
+
+        component.find('input[name="accountNumber"]').simulate('change', {
+            target: { value: '1000000000', name: 'accountNumber' },
+        });
+
+        component.find('input[name="routingNumber"]').simulate('change', {
+            target: { value: '011000015', name: 'routingNumber' },
+        });
+
+        expect(component.find('.mandate-text')).toHaveLength(0);
     });
 });

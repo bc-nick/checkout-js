@@ -69,8 +69,7 @@ describe('BraintreeAchPaymentForm', () => {
 
         expect(checkoutService.initializePayment).toHaveBeenCalledWith({
             braintreeach: {
-                mandateText:
-                    'I authorize Braintree to debit my bank account on behalf of My Online Store.',
+                mandateText: undefined,
             },
             gatewayId: undefined,
             methodId: 'braintreeach',

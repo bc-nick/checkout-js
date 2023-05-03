@@ -133,3 +133,20 @@ export const formFieldData: FormField[] = [
         required: true,
     },
 ];
+
+export const getMandateText = ({
+    storeName,
+    firstName,
+    lastName,
+    routingNumber,
+    accountNumber,
+    outstandingBalance,
+}: {
+    storeName: string;
+    firstName: string;
+    lastName: string;
+    routingNumber: string;
+    accountNumber: string;
+    outstandingBalance: string | number;
+}) =>
+    `By clicking Place Order, I authorize Braintree, a service of PayPal, on behalf of ${storeName} to verify my bank account information using bank information and consumer reports and I authorize ${storeName} to initiate an ACH/electronic debit to my checking/savings account, Depository Name: ${firstName} ${lastName}, Routing Number: ${routingNumber} and Account Number: ${accountNumber} , in the amount of ${outstandingBalance} on . I agree the ACH transactions I authorize comply with all applicable laws.`;

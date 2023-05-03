@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback, useEffect, useMemo } from 'react';
+import React, { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PaymentMethodProps } from '@bigcommerce/checkout/payment-integration-api';
 import { FormContext, LoadingOverlay } from '@bigcommerce/checkout/ui';
@@ -10,25 +10,41 @@ import {
 } from '../../validation-schemas';
 import { AchFormFields } from '../AchFormFields';
 
-import { AccountTypes, formFieldData, OwnershipTypes } from './braintreeAchPaymentFormConfig';
+import {
+    AccountTypes,
+    formFieldData,
+    getMandateText,
+    OwnershipTypes,
+} from './braintreeAchPaymentFormConfig';
 
 export interface AddressKeyMap<T = string> {
     [fieldName: string]: T;
 }
 
 export interface BraintreeAchPaymentFormProps extends Omit<PaymentMethodProps, 'onUnhandledError'> {
-    mandateText: string;
+    initializePayment: (mandateText?: string) => Promise<void>;
+    outstandingBalance?: number;
+    storeName?: string;
 }
 
 const BraintreeAchPaymentForm: FunctionComponent<BraintreeAchPaymentFormProps> = ({
+    initializePayment,
     paymentForm: { getFieldValue, setFieldValue, setValidationSchema, isSubmitted, setSubmitted },
-    mandateText,
+    outstandingBalance,
+    storeName,
     checkoutState,
     method,
     language,
 }) => {
-    const ownershipType = getFieldValue('ownershipType');
-    const isBusiness = ownershipType === OwnershipTypes.Business;
+    const [isShowMandateText, setIsShowMandateText] = useState(false);
+
+    const ownershipTypeValue = getFieldValue('ownershipType');
+    const routingNumberValue = getFieldValue('routingNumber');
+    const accountNumberValue = getFieldValue('accountNumber');
+    const firstNameValue = getFieldValue('firstName');
+    const lastNameValue = getFieldValue('lastName');
+
+    const isBusiness = ownershipTypeValue === OwnershipTypes.Business;
     const isLoadingBillingCountries = checkoutState.statuses.isLoadingBillingCountries();
 
     const usCountry = checkoutState.data
@@ -100,7 +116,7 @@ const BraintreeAchPaymentForm: FunctionComponent<BraintreeAchPaymentFormProps> =
     );
 
     const fieldDataByOwnershipType = useMemo(() => {
-        const isPersonalType = ownershipType === OwnershipTypes.Personal;
+        const isPersonalType = ownershipTypeValue === OwnershipTypes.Personal;
         const exceptionFieldTypes: BraintreeAchBankAccount[] = [];
 
         if (isPersonalType) {
@@ -115,17 +131,76 @@ const BraintreeAchPaymentForm: FunctionComponent<BraintreeAchPaymentFormProps> =
         return formFieldData.filter(
             ({ id }) => !exceptionFieldTypes.includes(id as BraintreeAchBankAccount),
         );
-    }, [ownershipType]);
+    }, [ownershipTypeValue]);
 
-    useEffect(() => {
-        setValidationSchema(
-            method,
+    const validationSchema = useMemo(
+        () =>
             getBraintreeAchValidationSchema({
                 formFieldData: fieldDataByOwnershipType,
                 language,
             }),
-        );
-    }, [method, language, fieldDataByOwnershipType, setValidationSchema]);
+        [fieldDataByOwnershipType, language],
+    );
+
+    useEffect(() => {
+        const validate = async () => {
+            const [isValidAccountNumber, isValidRoutingNumber, isValidFirstName, isValidLastName] =
+                await Promise.all([
+                    await validationSchema.fields.accountNumber?.isValid(accountNumberValue),
+                    await validationSchema.fields.routingNumber?.isValid(routingNumberValue),
+                    await validationSchema.fields.firstName?.isValid(firstNameValue),
+                    await validationSchema.fields.lastName?.isValid(lastNameValue),
+                ]);
+
+            setIsShowMandateText(
+                Boolean(
+                    isValidRoutingNumber &&
+                        isValidAccountNumber &&
+                        isValidFirstName &&
+                        isValidLastName,
+                ),
+            );
+        };
+
+        void validate();
+    }, [validationSchema, routingNumberValue, accountNumberValue, firstNameValue, lastNameValue]);
+
+    useEffect(() => {
+        setValidationSchema(method, validationSchema);
+    }, [validationSchema, method, setValidationSchema]);
+
+    const mandateText = useMemo(() => {
+        if (isShowMandateText && storeName && outstandingBalance) {
+            return getMandateText({
+                storeName,
+                firstName: String(firstNameValue),
+                lastName: String(lastNameValue),
+                routingNumber: String(routingNumberValue),
+                accountNumber: String(accountNumberValue),
+                outstandingBalance,
+            });
+        }
+
+        return null;
+    }, [
+        isShowMandateText,
+        storeName,
+        routingNumberValue,
+        accountNumberValue,
+        outstandingBalance,
+        firstNameValue,
+        lastNameValue,
+    ]);
+
+    useEffect(() => {
+        const initializePaymentWithMandateText = async () => {
+            if (mandateText) {
+                await initializePayment(mandateText);
+            }
+        };
+
+        void initializePaymentWithMandateText();
+    }, [mandateText, initializePayment]);
 
     return (
         <FormContext.Provider value={{ isSubmitted: isSubmitted(), setSubmitted }}>
@@ -136,7 +211,7 @@ const BraintreeAchPaymentForm: FunctionComponent<BraintreeAchPaymentFormProps> =
                         handleChange={handleChange}
                         language={language}
                     />
-                    <div className="mandate-text">{mandateText}</div>
+                    {isShowMandateText && <div className="mandate-text">{mandateText}</div>}
                 </div>
             </LoadingOverlay>
         </FormContext.Provider>
