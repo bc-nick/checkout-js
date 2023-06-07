@@ -210,6 +210,7 @@ const BraintreeAchPaymentForm: FunctionComponent<BraintreeAchPaymentFormProps> =
                             <PaymentFormContext.Provider value={{ paymentForm }}>
                                 <StoreInstrumentFieldset
                                     instrumentId={currentInstrument?.bigpayToken}
+                                    isAccountInstrument
                                 />
                             </PaymentFormContext.Provider>
                         )}
