@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.325.1-prerelease.1686573604016](https://github.com/bigcommerce/checkout-js/compare/v1.325.1-prerelease.1686562884147...v1.325.1-prerelease.1686573604016) (2023-06-12)
+
 ### [1.325.1-prerelease.1686562884147](https://github.com/bigcommerce/checkout-js/compare/v1.325.1-prerelease.1686558948009...v1.325.1-prerelease.1686562884147) (2023-06-12)
 
 ### [1.325.1-prerelease.1686558948009](https://github.com/bigcommerce/checkout-js/compare/v1.309.0...v1.325.1-prerelease.1686558948009) (2023-06-12)
