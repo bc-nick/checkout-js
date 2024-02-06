@@ -1,4 +1,6 @@
 import {
+    AccountInstrument,
+    HostedInstrument,
     PayPalCommerceAlternativeMethodsPaymentOptions,
     PayPalCommerceCreditPaymentInitializeOptions,
     PayPalCommercePaymentInitializeOptions,
@@ -17,6 +19,7 @@ type PayPalCommerceProvidersPaymentInitializeOptions =
 interface PayPalCommercePaymentMethodComponentProps {
     providerOptionsKey: string;
     providerOptionsData?: Partial<PayPalCommerceProvidersPaymentInitializeOptions>;
+    currentInstrument?: AccountInstrument;
 }
 
 interface ButtonActions {
@@ -34,10 +37,15 @@ const PayPalCommercePaymentMethodComponent: FunctionComponent<
     providerOptionsKey,
     providerOptionsData,
     children,
+    currentInstrument,
     language,
 }) => {
     const buttonActionsRef = useRef<ButtonActions | null>(null);
+    const shouldSaveInstrumentRef = useRef(false);
+    const renderButtonRef = useRef<(() => void) | null>(null);
+
     const termsValue = paymentForm.getFieldValue('terms');
+    const shouldSaveInstrument = paymentForm.getFieldValue('shouldSaveInstrument');
 
     const validateForm = async () => {
         const validationErrors = await paymentForm.validateForm();
@@ -58,8 +66,21 @@ const PayPalCommercePaymentMethodComponent: FunctionComponent<
     };
 
     useEffect(() => {
+        if (currentInstrument) {
+            paymentForm.hidePaymentSubmitButton(method, false);
+        } else {
+            paymentForm.hidePaymentSubmitButton(method, true);
+            setTimeout(() => renderButtonRef.current?.(), 0);
+        }
+    }, [currentInstrument]);
+
+    useEffect(() => {
         void validateButton();
     }, [termsValue]);
+
+    useEffect(() => {
+        shouldSaveInstrumentRef.current = Boolean(shouldSaveInstrument);
+    }, [shouldSaveInstrument]);
 
     const initializePayment = async () => {
         try {
@@ -68,8 +89,8 @@ const PayPalCommercePaymentMethodComponent: FunctionComponent<
                 methodId: method.id,
                 [providerOptionsKey]: {
                     container: '#checkout-payment-continue',
-                    onRenderButton: () => {
-                        paymentForm.hidePaymentSubmitButton(method, true);
+                    onInit: (onRenderButton: () => void) => {
+                        renderButtonRef.current = onRenderButton;
                     },
                     submitForm: () => {
                         paymentForm.setSubmitted(true);
@@ -84,7 +105,10 @@ const PayPalCommercePaymentMethodComponent: FunctionComponent<
                             onUnhandledError(error);
                         }
                     },
-                    onValidate: async (resolve: () => void, reject: () => void): Promise<void> => {
+                    onValidate: async (
+                        resolve: (hostedInstrumentValues?: HostedInstrument) => void,
+                        reject: () => void,
+                    ): Promise<void> => {
                         const keysValidation = await validateForm();
 
                         if (keysValidation.length) {
@@ -94,7 +118,9 @@ const PayPalCommercePaymentMethodComponent: FunctionComponent<
                             return reject();
                         }
 
-                        return resolve();
+                        return resolve({
+                            shouldSaveInstrument: shouldSaveInstrumentRef.current,
+                        });
                     },
                     onInitButton: async (actions: ButtonActions) => {
                         buttonActionsRef.current = actions;
@@ -131,7 +157,7 @@ const PayPalCommercePaymentMethodComponent: FunctionComponent<
         };
     }, []);
 
-    return children ? <>{children}</> : <></>;
+    return children ? <div className='paypalCommercePaymentMethodComponent'>{children}</div> : <></>;
 };
 
 export default PayPalCommercePaymentMethodComponent;
