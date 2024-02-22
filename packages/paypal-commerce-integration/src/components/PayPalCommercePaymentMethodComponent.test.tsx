@@ -78,7 +78,7 @@ describe('PayPalCommercePaymentMethodComponent', () => {
                 onValidate: expect.any(Function),
                 onInitButton: expect.any(Function),
                 getFieldsValues: expect.any(Function),
-                shouldNotRenderOnInitialization: true,
+                shouldRenderPayPalButtonOnInitialization: false,
             },
         });
     });
@@ -112,7 +112,7 @@ describe('PayPalCommercePaymentMethodComponent', () => {
                 submitForm: expect.any(Function),
                 onInitButton: expect.any(Function),
                 getFieldsValues: expect.any(Function),
-                shouldNotRenderOnInitialization: true,
+                shouldRenderPayPalButtonOnInitialization: false,
                 onInit: expect.any(Function),
                 apmFieldsStyles: {
                     variables: {

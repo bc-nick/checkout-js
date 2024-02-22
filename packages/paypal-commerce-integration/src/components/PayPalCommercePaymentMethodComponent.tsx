@@ -106,7 +106,7 @@ const PayPalCommercePaymentMethodComponent: FunctionComponent<
                 methodId: method.id,
                 [providerOptionsKey]: {
                     container: '#checkout-payment-continue',
-                    shouldNotRenderOnInitialization: true,
+                    shouldRenderPayPalButtonOnInitialization: false,
                     onInit: (onRenderButton: () => void) => {
                         renderButtonRef.current = onRenderButton;
                     },
