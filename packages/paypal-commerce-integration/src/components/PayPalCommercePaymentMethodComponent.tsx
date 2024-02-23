@@ -72,16 +72,14 @@ const PayPalCommercePaymentMethodComponent: FunctionComponent<
         if (currentInstrument && !shouldConfirmInstrument) {
             paymentForm.hidePaymentSubmitButton(method, false);
             hasPayPalButton.current = false;
-        } else {
+        } else if (!hasPayPalButton.current && renderButtonRef.current) {
             paymentForm.hidePaymentSubmitButton(method, true);
 
-            if (!hasPayPalButton.current && renderButtonRef.current) {
-                setTimeout(() => {
-                    renderButtonRef.current?.();
+            setTimeout(() => {
+                renderButtonRef.current?.();
 
-                    hasPayPalButton.current = true;
-                }, 0);
-            }
+                hasPayPalButton.current = true;
+            }, 0);
         }
     }, [currentInstrument]);
 
@@ -107,6 +105,9 @@ const PayPalCommercePaymentMethodComponent: FunctionComponent<
                 [providerOptionsKey]: {
                     container: '#checkout-payment-continue',
                     shouldRenderPayPalButtonOnInitialization: false,
+                    onRenderButton: () => {
+                        paymentForm.hidePaymentSubmitButton(method, true);
+                    },
                     onInit: (onRenderButton: () => void) => {
                         renderButtonRef.current = onRenderButton;
                     },
