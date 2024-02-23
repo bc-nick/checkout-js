@@ -35,6 +35,7 @@ export default function isInstrumentCardCodeRequired({
     }
 
     // Otherwise, if the shipping address is untrusted, show CVV field if the
+    // test
     // merchant either requires it for regular card or stored card payments.
     return !!(paymentMethod.config.isVaultingCvvEnabled || paymentMethod.config.cardCode);
 }
