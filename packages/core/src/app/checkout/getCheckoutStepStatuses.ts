@@ -90,16 +90,10 @@ const getBillingStepStatus = createSelector(
             : EMPTY_ARRAY;
     },
     (checkout, billingAddress, billingAddressFields) => {
-        const hasAddress = billingAddress
+        const isComplete = billingAddress
             ? isValidAddress(billingAddress, billingAddressFields)
             : false;
-        const isUsingWallet =
-            checkout && checkout.payments
-                ? checkout.payments.some(
-                      (payment) => SUPPORTED_METHODS.indexOf(payment.providerId) >= 0,
-                  )
-                : false;
-        const isComplete = hasAddress || isUsingWallet;
+
         const isUsingAmazonPay =
             checkout && checkout.payments
                 ? checkout.payments.some((payment) => payment.providerId === 'amazonpay')
@@ -128,7 +122,7 @@ const getBillingStepStatus = createSelector(
             type: CheckoutStepType.Billing,
             isActive: false,
             isComplete,
-            isEditable: isComplete && !isUsingWallet,
+            isEditable: isComplete,
             isRequired: true,
         };
     },
